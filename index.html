@@ -1,23 +1,122 @@
-Install ansible:
-sudo apt update
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ansible Server Setup Guide</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --code-bg: #1e293b;
+            --text-color: #1a1a1a;
+            --bg-color: #ffffff;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+
+        .note {
+            background-color: #f8fafc;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .steps {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .steps li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .steps li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ansible Server Setup Guide</h1>
+
+        <h2>Installing Ansible</h2>
+        <p>First, install Ansible on your control machine using the following commands:</p>
+        <pre><code class="language-bash">sudo apt update
 sudo apt install software-properties-common
 sudo apt-add-repository --yes --update ppa:ansible/ansible
-sudo apt install ansible
+sudo apt install ansible</code></pre>
 
-Ansible running:
+        <h2>Running Ansible</h2>
+        <div class="note">
+            <p>Follow these steps to set up and run your Ansible playbook:</p>
+            <ol class="steps">
+                <li>Create a basic inventory file named <code>hosts</code> with your server's IP address:</li>
+            </ol>
+        </div>
+        <pre><code class="language-bash">echo "your_server_ip" > hosts</code></pre>
 
-First create a basic inventory file named hosts with the server's IP address:
+        <div class="note">
+            <p>Run the playbook using one of these commands:</p>
+            <p><strong>For subsequent runs with SSH keys:</strong></p>
+        </div>
+        <pre><code class="language-bash">ansible-playbook -i hosts setup.yml</code></pre>
 
-echo "your_server_ip" > hosts
+        <div class="note">
+            <p><strong>For first-time setup with password authentication:</strong></p>
+        </div>
+        <pre><code class="language-bash">ansible-playbook -i hosts setup.yml --ask-pass --ask-become-pass</code></pre>
 
-Then run the playbook with:
-
-ansible-playbook -i hosts setup.yml
-If you're running this for the first time and still need to use password authentication for the initial setup, you'll need to add these flags:
-ansible-playbook -i hosts setup.yml --ask-pass --ask-become-pass
-
-Ansible playbook:
----
+        <h2>Ansible Playbook</h2>
+        <p>Save the following content as <code>setup.yml</code>:</p>
+        <pre><code class="language-yaml">---
 - name: Configure server security and Docker
   hosts: all
   become: yes
@@ -137,8 +236,8 @@ Ansible playbook:
         group: root
         line: "{{ item }}"
       loop:
-        - <key1>
-        - <key2>
+        - &lt;key1&gt;
+        - &lt;key2&gt;
 
     - name: Disable password authentication
       lineinfile:
@@ -161,4 +260,11 @@ Ansible playbook:
     - name: restart ssh
       service:
         name: sshd
-        state: restarted
+        state: restarted</code></pre>
+
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+</body>
+</html>
