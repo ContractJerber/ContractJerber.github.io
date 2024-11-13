@@ -11,6 +11,7 @@
             --code-bg: #1e293b;
             --text-color: #1a1a1a;
             --bg-color: #ffffff;
+            --warning-color: #f59e0b;
         }
         
         body {
@@ -43,6 +44,13 @@
             margin-bottom: 1rem;
         }
 
+        h3 {
+            font-size: 1.4rem;
+            color: var(--text-color);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
         pre {
             background-color: var(--code-bg);
             padding: 1rem;
@@ -59,6 +67,14 @@
         .note {
             background-color: #f8fafc;
             border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        .warning {
+            background-color: #fef3c7;
+            border-left: 4px solid var(--warning-color);
             padding: 1rem;
             margin: 1rem 0;
             border-radius: 0 0.5rem 0.5rem 0;
@@ -81,6 +97,19 @@
             left: 0;
             color: var(--primary-color);
         }
+
+        .required-changes {
+            background-color: #fef3c7;
+            border: 2px solid var(--warning-color);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .required-changes h3 {
+            color: var(--warning-color);
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
@@ -93,6 +122,39 @@
 sudo apt install software-properties-common
 sudo apt-add-repository --yes --update ppa:ansible/ansible
 sudo apt install ansible</code></pre>
+
+        <h2>Required Configuration Changes</h2>
+        <div class="required-changes">
+            <h3>Before Running the Playbook</h3>
+            <p>You need to modify the following sections in the <code>setup.yml</code> file:</p>
+            
+            <h4>1. SSH Access IPs</h4>
+            <p>Replace IP1, IP2, and IP3 with your allowed IP addresses for SSH access:</p>
+            <pre><code class="language-yaml">    - name: Allow SSH from specific IPs
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+        from_ip: "{{ item }}"
+      loop:
+        - IP1    # Replace with your IP address
+        - IP2    # Replace with additional IP if needed
+        - IP3    # Replace with additional IP if needed</code></pre>
+            
+            <h4>2. SSH Keys</h4>
+            <p>Replace &lt;key1&gt; and &lt;key2&gt; with your SSH public keys:</p>
+            <pre><code class="language-yaml">    - name: Add authorized keys for root
+      lineinfile:
+        path: /root/.ssh/authorized_keys
+        create: yes
+        mode: '0600'
+        owner: root
+        group: root
+        line: "{{ item }}"
+      loop:
+        - &lt;key1&gt;    # Replace with your first SSH public key
+        - &lt;key2&gt;    # Replace with your second SSH public key if needed</code></pre>
+        </div>
 
         <h2>Running Ansible</h2>
         <div class="note">
