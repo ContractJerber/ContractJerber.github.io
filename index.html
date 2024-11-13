@@ -1,0 +1,164 @@
+Install ansible:
+sudo apt update
+sudo apt install software-properties-common
+sudo apt-add-repository --yes --update ppa:ansible/ansible
+sudo apt install ansible
+
+Ansible running:
+
+First create a basic inventory file named hosts with the server's IP address:
+
+echo "your_server_ip" > hosts
+
+Then run the playbook with:
+
+ansible-playbook -i hosts setup.yml
+If you're running this for the first time and still need to use password authentication for the initial setup, you'll need to add these flags:
+ansible-playbook -i hosts setup.yml --ask-pass --ask-become-pass
+
+Ansible playbook:
+---
+- name: Configure server security and Docker
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install UFW and fail2ban
+      apt:
+        name: 
+          - ufw
+          - fail2ban
+        state: present
+        update_cache: yes
+
+    - name: Install required packages for Docker
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - gnupg
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure Docker service is started and enabled
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create Docker group
+      group:
+        name: docker
+        state: present
+
+    - name: Reset UFW to default state
+      ufw:
+        state: reset
+
+    - name: Allow SSH from specific IPs
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+        from_ip: "{{ item }}"
+      loop:
+        - IP1
+        - IP2
+        - IP3
+
+    - name: Allow HTTP
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+
+    - name: Allow HTTPS
+      ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+
+    - name: Allow all traffic from specific IP
+      ufw:
+        rule: allow
+        from_ip: 37.120.159.244
+
+    - name: Set default incoming policy
+      ufw:
+        default: deny
+        direction: incoming
+
+    - name: Enable UFW
+      ufw:
+        state: enabled
+
+    - name: Ensure root login is permitted
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin prohibit-password'
+      notify: restart ssh
+
+    - name: Create root SSH directory
+      file:
+        path: /root/.ssh
+        state: directory
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Add authorized keys for root
+      lineinfile:
+        path: /root/.ssh/authorized_keys
+        create: yes
+        mode: '0600'
+        owner: root
+        group: root
+        line: "{{ item }}"
+      loop:
+        - <key1>
+        - <key2>
+
+    - name: Disable password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      notify: restart ssh
+
+    - name: Configure fail2ban
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [sshd]
+          enabled = true
+          bantime = 3600
+          findtime = 600
+          maxretry = 3
+
+  handlers:
+    - name: restart ssh
+      service:
+        name: sshd
+        state: restarted
